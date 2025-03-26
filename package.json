@@ -1,0 +1,11 @@
+{
+  "name": "4bit-cpu-emulator",
+  "version": "1.0.0",
+  "main": "emulator.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "IngFavoslavJs",
+  "license": "ISC",
+  "description": ""
+}
