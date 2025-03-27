@@ -27,7 +27,10 @@ constructor() {
         this.attachEventListeners();
     }
 
-    // Inicializace zobrazení
+    /**
+     * Initialize all display elements
+     * @method
+     */
     initializeDisplays() {
         this.updateRegisters();
         this.updateFlags();
@@ -35,7 +38,10 @@ constructor() {
         this.updateMemoryDisplay();
     }
 
-    // Připojení tlačítek k funkcím
+    /**
+     * Attach event listeners to control buttons
+     * @method
+     */
     attachEventListeners() {
         if (this.eventListenersAttached) return;
         
@@ -52,7 +58,10 @@ constructor() {
         this.eventListenersAttached = true;
     }
 
-    // Načtení programu do paměti
+    /**
+     * Load program from file into memory
+     * @method
+     */
     loadProgram() {
         fetch('./prog.ass')
             .then(response => {
@@ -71,7 +80,10 @@ constructor() {
             });
     }
 
-    // Načtení programu do paměti
+    /**
+     * Parse and load program into memory
+     * @param {string} program - Assembly program text
+     */
     loadProgramIntoMemory(program) {
         this.labels.clear(); // Vyčistíme předchozí návěští
         let currentAddress = 0;
@@ -127,7 +139,12 @@ constructor() {
         this.updateMemoryDisplay();
     }
 
-    // Překlad instrukce na strojový kód
+    /**
+     * Assemble instruction into machine code
+     * @param {string} instruction - Assembly instruction
+     * @param {boolean} firstPass - Whether this is the first pass
+     * @returns {number[]} Machine code bytes
+     */
     assemble(instruction, firstPass = false) {
         const opcodes = {
             'NOP': 0x0,
@@ -291,7 +308,11 @@ constructor() {
         throw new Error(`Invalid instruction format: ${instruction}`);
     }
 
-    // Získání kódu registru
+    /**
+     * Get numeric code for register name
+     * @param {string} register - Register name
+     * @returns {number} Register code
+     */
     getRegisterCode(register) {
         const registers = { 
             'AX': 0x01, 'BX': 0x02, 'CX': 0x03, 'DX': 0x04, 'EX': 0x05, 'GX': 0x06,
@@ -306,7 +327,10 @@ constructor() {
         return code;
     }
 
-    // Spuštění programu
+    /**
+     * Start continuous program execution
+     * @method
+     */
     run() {
         this.running = true;
         const interval = setInterval(() => {
@@ -324,12 +348,18 @@ constructor() {
         }, 40);
     }
 
-    // Zastavení programu
+    /**
+     * Stop program execution
+     * @method
+     */
     stop() {
         this.running = false;
     }
 
-    // Krokování programu
+    /**
+     * Execute single instruction
+     * @method
+     */
     step() {
         if (this.registers.PC >= this.memory.length) {
             this.stop();
@@ -358,7 +388,10 @@ constructor() {
         this.updateMemoryDisplay();
     }
 
-    // Reset CPU
+    /**
+     * Reset CPU to initial state
+     * @method
+     */
     reset() {
         // Resetování registrů
         for (const reg of ['AX', 'BX', 'CX', 'DX', 'EX', 'GX']) {
@@ -380,7 +413,11 @@ constructor() {
         this.initializeDisplays();
     }
     
-    // Pomocné metody pro práci s registry
+    /**
+     * Get value from register
+     * @param {number} registerCode - Register code
+     * @returns {number} Register value
+     */
     getRegisterValue(registerCode) {
         let register, highLow;
         
@@ -481,7 +518,11 @@ constructor() {
         }
     }
 
-    // Vykonání instrukce
+    /**
+     * Execute instruction based on opcode and type
+     * @param {number} opcode - Instruction opcode
+     * @param {number} type - Instruction type
+     */
     execute(opcode, type) {
         try {
             switch (opcode) {
@@ -680,949 +721,4 @@ constructor() {
                     this.setRegisterValue(destReg, result);
                     this.updateFlagsFromResult(result);
                 } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // ADD [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const b = this.getRegisterValue(srcReg);
-                    const result = a + b;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // ADD reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const result = a + value;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // ADD [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const b = this.memory[srcAddress];
-                    const result = a + b;
-                    this.memory[destAddress] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // ADD [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a + value;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown ADD type: ${type}`);
-        }
-    }
-
-    // Implementace SUB instrukce
-    executeSUB(type) {
-        switch (type) {
-            case 0x00: { // SUB reg, reg
-                const destReg = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const b = this.getRegisterValue(srcReg);
-                const result = a - b;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // SUB reg, [mem]
-                const destReg = this.memory[this.registers.PC++];
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.getRegisterValue(destReg);
-                    const b = this.memory[address];
-                    const result = a - b;
-                    this.setRegisterValue(destReg, result);
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // SUB [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const b = this.getRegisterValue(srcReg);
-                    const result = a - b;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // SUB reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const result = a - value;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // SUB [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const b = this.memory[srcAddress];
-                    const result = a - b;
-                    this.memory[destAddress] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // SUB [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a - value;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown SUB type: ${type}`);
-        }
-    }
-
-    // Implementace AND instrukce
-    executeAND(type) {
-        switch (type) {
-            case 0x00: { // AND reg, reg
-                const destReg = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const b = this.getRegisterValue(srcReg);
-                const result = a & b;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // AND reg, [mem]
-                const destReg = this.memory[this.registers.PC++];
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.getRegisterValue(destReg);
-                    const b = this.memory[address];
-                    const result = a & b;
-                    this.setRegisterValue(destReg, result);
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // AND [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const b = this.getRegisterValue(srcReg);
-                    const result = a & b;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // AND reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const result = a & value;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // AND [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const b = this.memory[srcAddress];
-                    const result = a & b;
-                    this.memory[destAddress] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // AND [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a & value;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown AND type: ${type}`);
-        }
-    }
-
-    // Implementace OR instrukce
-    executeOR(type) {
-        switch (type) {
-            case 0x00: { // OR reg, reg
-                const destReg = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const b = this.getRegisterValue(srcReg);
-                const result = a | b;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // OR reg, [mem]
-                const destReg = this.memory[this.registers.PC++];
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.getRegisterValue(destReg);
-                    const b = this.memory[address];
-                    const result = a | b;
-                    this.setRegisterValue(destReg, result);
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // OR [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const b = this.getRegisterValue(srcReg);
-                    const result = a | b;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // OR reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const result = a | value;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // OR [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const b = this.memory[srcAddress];
-                    const result = a | b;
-                    this.memory[destAddress] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // OR [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a | value;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown OR type: ${type}`);
-        }
-    }
-
-    // Implementace XOR instrukce
-    executeXOR(type) {
-        switch (type) {
-            case 0x00: { // XOR reg, reg
-                const destReg = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const b = this.getRegisterValue(srcReg);
-                const result = a ^ b;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // XOR reg, [mem]
-                const destReg = this.memory[this.registers.PC++];
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.getRegisterValue(destReg);
-                    const b = this.memory[address];
-                    const result = a ^ b;
-                    this.setRegisterValue(destReg, result);
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // XOR [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const b = this.getRegisterValue(srcReg);
-                    const result = a ^ b;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // XOR reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const result = a ^ value;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // XOR [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const b = this.memory[srcAddress];
-                    const result = a ^ b;
-                    this.memory[destAddress] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // XOR [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a ^ value;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown XOR type: ${type}`);
-        }
-    }
-
-    // Implementace NOT instrukce
-    executeNOT(type) {
-        switch (type) {
-            case 0x00: { // NOT reg
-                const destReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const result = ~a & 0xFF;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // NOT [mem]
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = ~a & 0xFF;
-                    this.memory[address] = result;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown NOT type: ${type}`);
-        }
-    }
-
-    // Implementace JMP instrukce
-    executeJMP(type) {
-        switch (type) {
-            case 0x00: { // JMP reg
-                const srcReg = this.memory[this.registers.PC++];
-                const address = this.getRegisterValue(srcReg);
-                if (address < this.memory.length) {
-                    this.registers.PC = address;
-                } else {
-                    console.error(`Jump to invalid address: ${address}`);
-                    this.running = false;
-                }
-                break;
-            }
-            case 0x01: { // JMP [mem]
-                const addressPtr = this.memory[this.registers.PC++];
-                if (addressPtr < this.memory.length) {
-                    const address = this.memory[addressPtr];
-                    if (address < this.memory.length) {
-                        this.registers.PC = address;
-                    } else {
-                        console.error(`Jump to invalid address: ${address}`);
-                        this.running = false;
-                    }
-                } else {
-                    console.error(`Memory access out of bounds: ${addressPtr}`);
-                }
-                break;
-            }
-            case 0x03: { // JMP #immediate
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    this.registers.PC = address;
-                } else {
-                    console.error(`Jump to invalid address: ${address}`);
-                    this.running = false;
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown JMP type: ${type}`);
-        }
-    }
-
-    // Implementace JZ instrukce
-    executeJZ(type) {
-        if (this.registers.F.ZF === 1) {
-            switch (type) {
-                case 0x00: { // JZ reg
-                    const srcReg = this.memory[this.registers.PC++];
-                    const address = this.getRegisterValue(srcReg);
-                    if (address < this.memory.length) {
-                        this.registers.PC = address;
-                    } else {
-                        console.error(`Jump to invalid address: ${address}`);
-                        this.running = false;
-                    }
-                    break;
-                }
-                case 0x01: { // JZ [mem]
-                    const addressPtr = this.memory[this.registers.PC++];
-                    if (addressPtr < this.memory.length) {
-                        const address = this.memory[addressPtr];
-                        if (address < this.memory.length) {
-                            this.registers.PC = address;
-                        } else {
-                            console.error(`Jump to invalid address: ${address}`);
-                            this.running = false;
-                        }
-                    } else {
-                        console.error(`Memory access out of bounds: ${addressPtr}`);
-                    }
-                    break;
-                }
-                case 0x03: { // JZ #immediate
-                    const address = this.memory[this.registers.PC++];
-                    if (address < this.memory.length) {
-                        this.registers.PC = address;
-                    } else {
-                        console.error(`Jump to invalid address: ${address}`);
-                        this.running = false;
-                    }
-                    break;
-                }
-                default:
-                    console.error(`Unknown JZ type: ${type}`);
-            }
-        } else {
-            // Pokud ZF není nastaven, přeskočíme operand
-            if (type === 0x00 || type === 0x01 || type === 0x03) {
-                this.registers.PC++;
-            }
-        }
-    }
-
-    // Implementace JC instrukce
-    executeJC(type) {
-        if (this.registers.F.CF === 1) {
-            switch (type) {
-                case 0x00: { // JC reg
-                    const srcReg = this.memory[this.registers.PC++];
-                    const address = this.getRegisterValue(srcReg);
-                    if (address < this.memory.length) {
-                        this.registers.PC = address;
-                    } else {
-                        console.error(`Jump to invalid address: ${address}`);
-                        this.running = false;
-                    }
-                    break;
-                }
-                case 0x01: { // JC [mem]
-                    const addressPtr = this.memory[this.registers.PC++];
-                    if (addressPtr < this.memory.length) {
-                        const address = this.memory[addressPtr];
-                        if (address < this.memory.length) {
-                            this.registers.PC = address;
-                        } else {
-                            console.error(`Jump to invalid address: ${address}`);
-                            this.running = false;
-                        }
-                    } else {
-                        console.error(`Memory access out of bounds: ${addressPtr}`);
-                    }
-                    break;
-                }
-                case 0x03: { // JC #immediate
-                    const address = this.memory[this.registers.PC++];
-                    if (address < this.memory.length) {
-                        this.registers.PC = address;
-                    } else {
-                        console.error(`Jump to invalid address: ${address}`);
-                        this.running = false;
-                    }
-                    break;
-                }
-                default:
-                    console.error(`Unknown JC type: ${type}`);
-            }
-        } else {
-            // Pokud CF není nastaven, přeskočíme operand
-            if (type === 0x00 || type === 0x01 || type === 0x03) {
-                this.registers.PC++;
-            }
-        }
-    }
-
-    // Implementace SHL instrukce
-    executeSHL(type) {
-        switch (type) {
-            case 0x00: { // SHL reg, reg
-                const destReg = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
-                const result = a << count;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // SHL reg, [mem]
-                const destReg = this.memory[this.registers.PC++];
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.getRegisterValue(destReg);
-                    const count = this.memory[address] & 0x7; // Max 7 bitů posunu
-                    const result = a << count;
-                    this.setRegisterValue(destReg, result);
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // SHL [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
-                    const result = a << count;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // SHL reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
-                const a = this.getRegisterValue(destReg);
-                const result = a << count;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // SHL [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const count = this.memory[srcAddress] & 0x7; // Max 7 bitů posunu
-                    const result = a << count;
-                    this.memory[destAddress] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // SHL [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a << count;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown SHL type: ${type}`);
-        }
-    }
-
-    // Implementace SHR instrukce
-    executeSHR(type) {
-        switch (type) {
-            case 0x00: { // SHR reg, reg
-                const destReg = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
-                const result = a >> count;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // SHR reg, [mem]
-                const destReg = this.memory[this.registers.PC++];
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.getRegisterValue(destReg);
-                    const count = this.memory[address] & 0x7; // Max 7 bitů posunu
-                    const result = a >> count;
-                    this.setRegisterValue(destReg, result);
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // SHR [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
-                    const result = a >> count;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // SHR reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
-                const a = this.getRegisterValue(destReg);
-                const result = a >> count;
-                this.setRegisterValue(destReg, result);
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // SHR [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const count = this.memory[srcAddress] & 0x7; // Max 7 bitů posunu
-                    const result = a >> count;
-                    this.memory[destAddress] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // SHR [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a >> count;
-                    this.memory[address] = result & 0xFF;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown SHR type: ${type}`);
-        }
-    }
-
-    // Implementace CMP instrukce
-    executeCMP(type) {
-        switch (type) {
-            case 0x00: { // CMP reg, reg
-                const destReg = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const b = this.getRegisterValue(srcReg);
-                const result = a - b;
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x01: { // CMP reg, [mem]
-                const destReg = this.memory[this.registers.PC++];
-                const address = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.getRegisterValue(destReg);
-                    const b = this.memory[address];
-                    const result = a - b;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x02: { // CMP [mem], reg
-                const address = this.memory[this.registers.PC++];
-                const srcReg = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const b = this.getRegisterValue(srcReg);
-                    const result = a - b;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            case 0x03: { // CMP reg, #immediate
-                const destReg = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                const a = this.getRegisterValue(destReg);
-                const result = a - value;
-                this.updateFlagsFromResult(result);
-                break;
-            }
-            case 0x05: { // CMP [mem1], [mem2] - NOVÝ TYP
-                const destAddress = this.memory[this.registers.PC++];
-                const srcAddress = this.memory[this.registers.PC++];
-                if (destAddress < this.memory.length && srcAddress < this.memory.length) {
-                    const a = this.memory[destAddress];
-                    const b = this.memory[srcAddress];
-                    const result = a - b;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: dest=${destAddress}, src=${srcAddress}`);
-                }
-                break;
-            }
-            case 0x06: { // CMP [mem], #immediate - NOVÝ TYP
-                const address = this.memory[this.registers.PC++];
-                const value = this.memory[this.registers.PC++];
-                if (address < this.memory.length) {
-                    const a = this.memory[address];
-                    const result = a - value;
-                    this.updateFlagsFromResult(result);
-                } else {
-                    console.error(`Memory access out of bounds: ${address}`);
-                }
-                break;
-            }
-            default:
-                console.error(`Unknown CMP type: ${type}`);
-        }
-    }
-
-    // Aktualizace flagů na základě výsledku operace
-    updateFlagsFromResult(result) {
-        const maxValue = this.registers.F.MOP === 1 ? 0xF : 0xFF; // Max hodnota podle MOP módu
-        
-        // Carry Flag - nastaví se, pokud dojde k přetečení
-        this.registers.F.CF = result > maxValue || result < 0 ? 1 : 0;
-        
-        // Upravíme výsledek podle módu
-        const maskedResult = result & maxValue;
-        
-        // Zero Flag - nastaví se, pokud je výsledek 0
-        this.registers.F.ZF = maskedResult === 0 ? 1 : 0;
-        
-        // Sign Flag - nastaví se, pokud je nejvyšší bit výsledku 1
-        this.registers.F.SF = (maskedResult & (this.registers.F.MOP === 1 ? 0x8 : 0x80)) !== 0 ? 1 : 0;
-        
-        // Overflow Flag - nastaví se při přetečení nebo podtečení
-        this.registers.F.OF = (result > maxValue || result < 0) ? 1 : 0;
-        
-        // Parity Flag - nastaví se, pokud je počet jedničkových bitů sudý
-        let bits = maskedResult;
-        let parity = 0;
-        while (bits > 0) {
-            parity ^= (bits & 1);
-            bits >>= 1;
-        }
-        this.registers.F.PF = parity === 0 ? 1 : 0;
-    }
-
-    // Aktualizace zobrazení registrů
-    updateRegisters() {
-        const registersDiv = document.getElementById('registers');
-        
-        // Vždy zobrazujeme registry jako dvě 4-bitové banky
-        registersDiv.innerHTML = `
-        AX: ${this.registers.AX[0].toString(16)}${this.registers.AX[1].toString(16)} (AH: ${this.registers.AX[0].toString(16)}, AL: ${this.registers.AX[1].toString(16)})<br>
-        BX: ${this.registers.BX[0].toString(16)}${this.registers.BX[1].toString(16)} (BH: ${this.registers.BX[0].toString(16)}, BL: ${this.registers.BX[1].toString(16)})<br>
-        CX: ${this.registers.CX[0].toString(16)}${this.registers.CX[1].toString(16)} (CH: ${this.registers.CX[0].toString(16)}, CL: ${this.registers.CX[1].toString(16)})<br>
-        DX: ${this.registers.DX[0].toString(16)}${this.registers.DX[1].toString(16)} (DH: ${this.registers.DX[0].toString(16)}, DL: ${this.registers.DX[1].toString(16)})<br>
-        EX: ${this.registers.EX[0].toString(16)}${this.registers.EX[1].toString(16)} (EH: ${this.registers.EX[0].toString(16)}, EL: ${this.registers.EX[1].toString(16)})<br>
-        GX: ${this.registers.GX[0].toString(16)}${this.registers.GX[1].toString(16)} (GH: ${this.registers.GX[0].toString(16)}, GL: ${this.registers.GX[1].toString(16)})<br>
-        PC: ${this.registers.PC.toString(16).padStart(2, '0')}<br>
-        IR: ${this.registers.IR.IH.toString(16)}${this.registers.IR.IL.toString(16)} (IH: ${this.registers.IR.IH.toString(16)}, IL: ${this.registers.IR.IL.toString(16)})<br>
-        `;
-    }
-
-    // Aktualizace zobrazení flagů
-    updateFlags() {
-        const flagsDiv = document.getElementById('flags');
-        flagsDiv.innerHTML = `
-        CF: ${this.registers.F.CF} (Carry Flag)<br>
-        ZF: ${this.registers.F.ZF} (Zero Flag)<br>
-        SF: ${this.registers.F.SF} (Sign Flag)<br>
-        OF: ${this.registers.F.OF} (Overflow Flag)<br>
-        PF: ${this.registers.F.PF} (Parity Flag)<br>
-        IF: ${this.registers.F.IF} (Interrupt Flag)<br>
-        MOP: ${this.registers.F.MOP === 1 ? '4-bit' : '8-bit'} (Memory Operation Mode)<br>
-        `;
-    }
-
-    // Aktualizace zobrazení LED
-    updateLEDs() {
-        const ledDisplay = document.getElementById('ledDisplay');
-        ledDisplay.innerHTML = '';
-        
-        // Získání hodnoty z registru AX
-        const output = this.getRegisterValue(0x01);
-        
-        // Vytvoření LED pro každý bit
-        for (let i = 7; i >= 0; i--) {
-            const led = document.createElement('div');
-            led.className = 'led' + ((output & (1 << i)) ? ' on' : '');
-            led.title = `Bit ${i}: ${(output & (1 << i)) ? '1' : '0'}`;
-            ledDisplay.appendChild(led);
-        }
-    }
-
-    // Aktualizace zobrazení paměti
-    updateMemoryDisplay() {
-        const memoryDiv = document.getElementById('memory');
-        memoryDiv.innerHTML = '';
-        
-        // Vytvoření tabulky pro paměť
-        const table = document.createElement('table');
-        table.className = 'memory-table';
-        
-        // Vytvoření hlavičky tabulky
-        const headerRow = document.createElement('tr');
-        headerRow.innerHTML = '<th></th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>';
-        table.appendChild(headerRow);
-        
-        // Vytvoření buněk pro paměť
-        for (let row = 0; row < 16; row++) {
-            const tr = document.createElement('tr');
-            
-            // Přidání hlavičky řádku
-            const th = document.createElement('th');
-            th.textContent = row.toString(16).toUpperCase();
-            tr.appendChild(th);
-            
-            // Přidání buněk s hodnotami
-            for (let col = 0; col < 16; col++) {
-                const address = row * 16 + col;
-                const td = document.createElement('td');
-                td.textContent = this.memory[address].toString(16).padStart(2, '0').toUpperCase();
-                td.className = this.registers.PC === address ? 'active' : '';
-                td.title = `Address: ${address.toString(16).padStart(2, '0').toUpperCase()}`;
-                tr.appendChild(td);
-            }
-            
-            table.appendChild(tr);
-        }
-        
-        memoryDiv.appendChild(table);
-    }
-
-    // Aktualizace zobrazení kódu programu
-    updateProgramCode(program) {
-        const programCodeDiv = document.getElementById('programCode');
-        
-        // Přidání čísel řádků a zvýraznění syntaxe
-        const lines = program.split('\n');
-        let formattedCode = '';
-        
-        lines.forEach((line, index) => {
-            const lineNumber = (index + 1).toString().padStart(3, '0');
-            
-            // Zvýraznění komentářů
-            let formattedLine = line;
-            const commentIndex = line.indexOf(';');
-            if (commentIndex !== -1) {
-                const code = line.substring(0, commentIndex);
-                const comment = line.substring(commentIndex);
-                formattedLine = `${code}<span class="comment">${comment}</span>`;
-            }
-            
-            formattedCode += `<span class="line-number">${lineNumber}:</span> ${formattedLine}\n`;
-        });
-        
-        programCodeDiv.innerHTML = formattedCode;
-    }
-}
-
-// Vytvoření instance CPU
-const cpu = new CPU();
+                    console.error(`Memory access out of bounds:
