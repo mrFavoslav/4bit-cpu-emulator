@@ -3,41 +3,41 @@
 ; CX - dělitel pro testování prvočíselnosti
 ; DX - pomocný registr pro výpočty
 
-start:  MOV BX, #2      ; Začínáme od 2 (první prvočíslo)
+start:  MOV BX, #53      ; Začínáme od 2 (první prvočíslo)
         MOV MOP, #0     ; Nastavíme 8-bit mód
 
 next:   MOV AX, BX      ; Zobrazíme aktuální číslo v AX
-      
+  
         ; Test, zda je BX prvočíslo
         MOV CX, #2      ; Začínáme dělit 2
-      
+  
 test:   CMP CX, BX      ; Pokud CX = BX, je to prvočíslo
         JZ prime        ; Skok na označení prvočísla
-      
+  
         MOV DX, BX      ; Kopie BX do DX pro dělení
-      
+  
 div_loop:
         CMP DX, CX      ; Porovnáme DX s CX
         JC div_end      ; Pokud DX < CX, konec dělení
         SUB DX, CX      ; DX = DX - CX
         JMP div_loop    ; Opakujeme odčítání
-      
+  
 div_end:
         CMP DX, #0      ; Kontrola zbytku
         JZ not_prime    ; Pokud je zbytek 0, není to prvočíslo
-      
+  
         ADD CX, #1      ; Zvýšíme dělitel
         JMP test        ; Testujeme další dělitel
-      
+  
 prime:  ; Číslo je prvočíslo - zobrazíme ho
         MOV AX, BX      ; Zobrazíme prvočíslo v AX
         INT #0          ; Zobrazíme na LED
-      
+  
 not_prime:
         ; Přejdeme na další číslo
         ADD BX, #1      ; Zvýšíme testované číslo
         CMP BX, #255    ; Kontrola, zda jsme nepřekročili 255
         JZ end          ; Pokud ano, konec programu
         JMP next        ; Jinak testujeme další číslo
-      
+  
 end:    HLT            ; Konec programu

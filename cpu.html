@@ -5,61 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4-bit/8-bit CPU Emulator</title>
     <style>
+        /* Base styling for the entire document */
         body {
             font-family: monospace;
             background: #f0f0f0;
             color: #333;
             padding: 20px;
-            font-size: 16px; /* Zvětšený základní font */
+            font-size: 16px; /* Increased base font size */
         }
         
+        /* Main container with two-column grid layout */
         .container {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Rozdělení na dva sloupce */
-            grid-auto-flow: column; /* Zajistí, že sloupce se plní shora dolů */
+            grid-template-columns: 1fr 1fr; /* Split into two columns */
+            grid-auto-flow: column; /* Ensures columns fill from top to bottom */
             gap: 20px;
-            max-width: 1400px; /* Zvětšená maximální šířka */
+            max-width: 1400px; /* Increased maximum width */
             margin: 0 auto;
         }
         
+        /* Left column positioning */
         .left-column {
             grid-column: 1;
         }
         
+        /* Right column positioning */
         .right-column {
             grid-column: 2;
         }
         
+        /* Styling for each section/panel */
         .section {
             background: #fff;
-            padding: 20px; /* Zvětšený padding */
+            padding: 20px; /* Increased padding */
             border-radius: 5px;
             border: 1px solid #ddd;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         
+        /* Header styling */
         h2, h3 {
             margin: 0 0 15px;
-            font-size: 1.5em; /* Zvětšené nadpisy */
+            font-size: 1.5em; /* Increased header size */
         }
         
+        /* Button styling */
         button {
             background: #0078d4;
             color: white;
             border: none;
-            padding: 12px 24px; /* Zvětšená tlačítka */
+            padding: 12px 24px; /* Larger buttons */
             margin: 8px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1.1em; /* Zvětšený text tlačítek */
+            font-size: 1.1em; /* Increased button text size */
         }
         
+        /* Button hover effect */
         button:hover {
             background: #005bb5;
         }
         
+        /* LED display styling */
         .led {
-            width: 40px; /* Zvětšené LED */
+            width: 40px; /* Larger LEDs */
             height: 40px;
             border-radius: 50%;
             background: #ddd;
@@ -68,76 +77,87 @@
             border: 2px solid #ccc;
         }
         
+        /* Styling for active/on LEDs */
         .led.on {
             background: #ff0000;
             box-shadow: 0 0 15px #ff0000;
         }
         
+        /* Memory table styling */
         .memory-table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 16px; /* Zvětšený text tabulky */
+            font-size: 16px; /* Increased table text size */
         }
         
+        /* Memory table cell styling */
         .memory-table th, .memory-table td {
             border: 1px solid #ddd;
             padding: 6px;
             text-align: center;
         }
         
+        /* Memory table header styling */
         .memory-table th {
             background-color: #f2f2f2;
             font-weight: bold;
         }
         
+        /* Highlight for active memory cell (current PC) */
         .memory-table td.active {
             background-color: #e6f3ff;
             font-weight: bold;
             color: #0078d4;
         }
         
+        /* Individual memory cell styling (alternative display) */
         .memory-cell {
             display: inline-block;
-            width: 40px; /* Zvětšené buňky paměti */
+            width: 40px; /* Larger memory cells */
             height: 40px;
             border: 1px solid #ccc;
             text-align: center;
             line-height: 40px;
             margin: 3px;
             background: #fff;
-            font-size: 16px; /* Zvětšený text buněk */
+            font-size: 16px; /* Increased cell text size */
         }
         
+        /* Highlight for active memory cell */
         .memory-cell.active {
             background: #e6f3ff;
             border-color: #0078d4;
         }
         
+        /* Code display styling */
         pre {
             background: #f5f5f5;
             padding: 15px;
             border-radius: 5px;
             overflow-x: auto;
-            max-height: 500px; /* Zvětšená výška pro kód */
-            font-size: 16px; /* Zvětšený text kódu */
+            max-height: 500px; /* Increased height for code display */
+            font-size: 16px; /* Increased code text size */
             line-height: 1.5;
         }
         
+        /* Register and flag display styling */
         #registers, #flags {
-            font-size: 16px; /* Zvětšený text registrů a flagů */
+            font-size: 16px; /* Increased text size for registers and flags */
             line-height: 1.8;
         }
 
+        /* Container for program code with scrolling */
         .section:has(#programCode) {
-            max-height: 600px; /* Maximální výška sekce */
-            overflow: hidden; /* Skryje přetékající obsah */
+            max-height: 600px; /* Maximum section height */
+            overflow: hidden; /* Hide overflowing content */
             display: flex;
             flex-direction: column;
         }
 
+        /* Program code display with scrolling */
         #programCode {
             flex: 1;
-            overflow-y: auto; /* Povolí vertikální scrollování */
+            overflow-y: auto; /* Enable vertical scrolling */
             margin: 0;
             padding: 15px;
             background: #f5f5f5;
@@ -145,15 +165,17 @@
             font-size: 16px;
             line-height: 1.5;
             white-space: pre;
-            height: calc(100% - 60px); /* Výška mínus padding a nadpis */
+            height: calc(100% - 60px); /* Height minus padding and header */
         }
 
+        /* Line number styling in code display */
         .line-number {
             color: #666;
             user-select: none;
             margin-right: 10px;
         }
 
+        /* Comment styling in code display */
         .comment {
             color: #008000;
             font-style: italic;
@@ -162,7 +184,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- Levý sloupec -->
+        <!-- Left column sections -->
         <div class="section left-column">
             <h2>Program Control</h2>
             <button id="loadBtn">Load Program</button>
@@ -182,7 +204,7 @@
             <div id="flags"></div>
         </div>
 
-        <!-- Pravý sloupec -->
+        <!-- Right column sections -->
         <div class="section right-column">
             <h2>Output LEDs</h2>
             <div id="ledDisplay"></div>
@@ -199,8 +221,10 @@
         </div>
     </div>
 
+    <!-- Load the CPU emulator JavaScript -->
     <script src="./emulator.js"></script>
     <script>
+        // Initialize the CPU emulator when the page loads
         document.addEventListener('DOMContentLoaded', function() {
             const cpu = new CPU();
             cpu.initializeDisplays();

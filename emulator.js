@@ -1,33 +1,33 @@
 class CPU {
-constructor() {
+    constructor() {
         this.registers = {
-            AX: [0, 0], // AH, AL - vždy dvě 4-bitové banky
-            BX: [0, 0], // BH, BL
-            CX: [0, 0], // CH, CL
-            DX: [0, 0], // DH, DL
-            EX: [0, 0], // EH, EL
-            GX: [0, 0], // GH, GL
-            PC: 0,      // Program Counter
+            AX: [0, 0], // AH, AL - two 4-bit banks
+            BX: [0, 0], // BH, BL - two 4-bit banks
+            CX: [0, 0], // CH, CL - two 4-bit banks
+            DX: [0, 0], // DH, DL - two 4-bit banks
+            EX: [0, 0], // EH, EL - two 4-bit banks
+            GX: [0, 0], // GH, GL - two 4-bit banks
+            PC: 0,      // Program Counter - stores the address of the next instruction
             IR: { IH: 0, IL: 0 }, // Instruction Register (IH = opcode, IL = type)
             F: {
-                CF: 0, // Carry Flag
-                ZF: 0, // Zero Flag
-                SF: 0, // Sign Flag
-                OF: 0, // Overflow Flag
-                PF: 0, // Parity Flag
-                IF: 0, // Interrupt Flag
+                CF: 0, // Carry Flag - set when an operation results in a carry or borrow
+                ZF: 0, // Zero Flag - set when the result of an operation is zero
+                SF: 0, // Sign Flag - set when the result of an operation is negative
+                OF: 0, // Overflow Flag - set when an arithmetic operation overflows
+                PF: 0, // Parity Flag - set when the number of 1 bits in the result is even
+                IF: 0, // Interrupt Flag - enables/disables interrupts
                 MOP: 1 // Memory Operation Mode (1 = 4-bit, 0 = 8-bit)
             }
         };
         this.memory = new Uint8Array(256); // 256 bytes of memory
         this.running = false;
-        this.labels = new Map(); // Pro ukládání návěští a jejich adres
-        this.eventListenersAttached = false; // Flag pro kontrolu, zda už byly listenery připojeny
+        this.labels = new Map(); // For storing labels and their addresses
+        this.eventListenersAttached = false; // Flag to check if event listeners are already attached
         this.initializeDisplays();
         this.attachEventListeners();
     }
 
-    // Inicializace zobrazení
+    // Initialize displays
     initializeDisplays() {
         this.updateRegisters();
         this.updateFlags();
@@ -35,7 +35,7 @@ constructor() {
         this.updateMemoryDisplay();
     }
 
-    // Připojení tlačítek k funkcím
+    // Attach buttons to functions
     attachEventListeners() {
         if (this.eventListenersAttached) return;
         
@@ -52,7 +52,7 @@ constructor() {
         this.eventListenersAttached = true;
     }
 
-    // Načtení programu do paměti
+    // Load program into memory
     loadProgram() {
         fetch('./prog.ass')
             .then(response => {
@@ -71,12 +71,12 @@ constructor() {
             });
     }
 
-    // Načtení programu do paměti
+    // Load program into memory
     loadProgramIntoMemory(program) {
-        this.labels.clear(); // Vyčistíme předchozí návěští
+        this.labels.clear(); // Clear previous labels
         let currentAddress = 0;
         
-        // První průchod - sběr návěští
+        // First pass - collect labels
         const lines = program.split('\n')
             .map(line => line.trim())
             .filter(line => line && !line.startsWith(';'));
@@ -85,11 +85,11 @@ constructor() {
             if (line.includes(':')) {
                 const [label] = line.split(':');
                 this.labels.set(label.trim(), currentAddress);
-                // Pokud je na řádku jen návěští, nepočítáme adresu
+                // If the line only contains a label, don't count the address
                 if (line.trim().endsWith(':')) return;
             }
             
-            // Spočítáme velikost instrukce
+            // Calculate instruction size
             const instruction = line.split(':')[1]?.trim() || line.trim();
             if (instruction) {
                 try {
@@ -101,13 +101,13 @@ constructor() {
             }
         });
         
-        // Druhý průchod - skutečné sestavení
+        // Second pass - actual assembly
         currentAddress = 0;
         lines.forEach(line => {
             if (line.includes(':')) {
-                // Pokud je na řádku jen návěští, přeskočíme
+                // If the line only contains a label, skip
                 if (line.trim().endsWith(':')) return;
-                // Jinak vezmeme část za návěštím
+                // Otherwise take the part after the label
                 line = line.split(':')[1].trim();
             }
             
@@ -127,25 +127,25 @@ constructor() {
         this.updateMemoryDisplay();
     }
 
-    // Překlad instrukce na strojový kód
+    // Translate instruction to machine code
     assemble(instruction, firstPass = false) {
         const opcodes = {
-            'NOP': 0x0,
-            'HLT': 0x1,
-            'INT': 0x2,
-            'MOV': 0x10,
-            'ADD': 0x11,
-            'SUB': 0x12,
-            'AND': 0x13,
-            'OR':  0x14,
-            'XOR': 0x15,
-            'NOT': 0x16,
-            'JMP': 0x17,
-            'JZ':  0x18,
-            'JC':  0x19,
-            'SHL': 0x1A,
-            'SHR': 0x1B,
-            'CMP': 0x1C
+            'NOP': 0x0,  // No operation
+            'HLT': 0x1,  // Halt
+            'INT': 0x2,  // Interrupt
+            'MOV': 0x10, // Move data
+            'ADD': 0x11, // Addition
+            'SUB': 0x12, // Subtraction
+            'AND': 0x13, // Logical AND
+            'OR':  0x14, // Logical OR
+            'XOR': 0x15, // Logical XOR
+            'NOT': 0x16, // Logical NOT
+            'JMP': 0x17, // Jump
+            'JZ':  0x18, // Jump if zero
+            'JC':  0x19, // Jump if carry
+            'SHL': 0x1A, // Shift left
+            'SHR': 0x1B, // Shift right
+            'CMP': 0x1C  // Compare
         };
     
         // Remove any comments
@@ -178,19 +178,19 @@ constructor() {
             return [opcode, 0x00];
         }
     
-        // Pro skoky (JMP, JZ, JC) přidáme podporu návěští
+        // For jumps (JMP, JZ, JC) add support for labels
         if (['JMP', 'JZ', 'JC'].includes(parts[0]) && parts.length === 2) {
             const target = parts[1];
             
-            // Pokud je to návěští
+            // If it's a label
             if (!target.startsWith('#') && !target.startsWith('[')) {
-                if (firstPass) return [opcode, 0x03, 0x00]; // Dummy hodnoty pro první průchod
+                if (firstPass) return [opcode, 0x03, 0x00]; // Dummy values for first pass
                 
                 const address = this.labels.get(target);
                 if (address === undefined) {
                     throw new Error(`Unknown label: ${target}`);
                 }
-                return [opcode, 0x03, address]; // Použijeme immediate mód
+                return [opcode, 0x03, address]; // Use immediate mode
             }
         }
     
@@ -291,7 +291,7 @@ constructor() {
         throw new Error(`Invalid instruction format: ${instruction}`);
     }
 
-    // Získání kódu registru
+    // Get register code
     getRegisterCode(register) {
         const registers = { 
             'AX': 0x01, 'BX': 0x02, 'CX': 0x03, 'DX': 0x04, 'EX': 0x05, 'GX': 0x06,
@@ -306,7 +306,7 @@ constructor() {
         return code;
     }
 
-    // Spuštění programu
+    // Run program
     run() {
         this.running = true;
         const interval = setInterval(() => {
@@ -321,15 +321,15 @@ constructor() {
                 this.stop();
                 console.log("Program reached end of memory");
             }
-        }, 40);
+        }, 10);
     }
 
-    // Zastavení programu
+    // Stop program
     stop() {
         this.running = false;
     }
 
-    // Krokování programu
+    // Step through program
     step() {
         if (this.registers.PC >= this.memory.length) {
             this.stop();
@@ -337,21 +337,21 @@ constructor() {
             return;
         }
         
-        // Načtení opcode a typu instrukce
+        // Load opcode and instruction type
         const opcode = this.memory[this.registers.PC++];
         const type = this.memory[this.registers.PC++];
         
-        // Logování pro ladění - přidáme unikátní identifikátor (např. časové razítko)
+        // Logging for debugging - add unique identifier (e.g. timestamp)
         console.log(`Executing instruction at ${new Date().toTimeString().split(' ')[0]}.${new Date().getMilliseconds().toString().padStart(3, '0')}: opcode=${opcode.toString(16)}, type=${type.toString(16)}, PC=${this.registers.PC.toString(16)}`);
         
-        // Aktualizace Instruction Register
+        // Update Instruction Register
         this.registers.IR.IH = opcode;
         this.registers.IR.IL = type;
         
-        // Vykonání instrukce
+        // Execute instruction
         this.execute(opcode, type);
         
-        // Aktualizace displejů po každé instrukci
+        // Update displays after each instruction
         this.updateRegisters();
         this.updateFlags();
         this.updateLEDs();
@@ -360,7 +360,7 @@ constructor() {
 
     // Reset CPU
     reset() {
-        // Resetování registrů
+        // Reset registers
         for (const reg of ['AX', 'BX', 'CX', 'DX', 'EX', 'GX']) {
             this.registers[reg] = [0, 0];
         }
@@ -368,26 +368,26 @@ constructor() {
         this.registers.PC = 0;
         this.registers.IR = { IH: 0, IL: 0 };
         
-        // Resetování flagů
+        // Reset flags
         for (const flag in this.registers.F) {
             this.registers.F[flag] = flag === 'MOP' ? 1 : 0;
         }
         
-        // Resetování paměti
+        // Reset memory
         this.memory = new Uint8Array(256);
         
         this.running = false;
         this.initializeDisplays();
     }
     
-    // Pomocné metody pro práci s registry
+    // Helper methods for working with registers
     getRegisterValue(registerCode) {
         let register, highLow;
         
-        // Kontrola platnosti kódu registru
+        // Check register code validity
         if (registerCode < 0x01 || registerCode > 0x12) {
             console.error(`Invalid register code: ${registerCode.toString(16)}`);
-            return 0; // Vrátíme výchozí hodnotu 0
+            return 0; // Return default value 0
         }
         
         switch (registerCode) {
@@ -419,7 +419,7 @@ constructor() {
             } else {
                 return ((this.registers[register][0] & 0xF) << 4) | (this.registers[register][1] & 0xF);
             }
-        } else { // 8-bit mode - stále používáme dvě 4-bitové banky
+        } else { // 8-bit mode - still using two 4-bit banks
             if (highLow === 'high') {
                 return this.registers[register][0] & 0xF;
             } else if (highLow === 'low') {
@@ -433,10 +433,10 @@ constructor() {
     setRegisterValue(registerCode, value) {
         let register, highLow;
         
-        // Kontrola platnosti kódu registru
+        // Check register code validity
         if (registerCode < 0x01 || registerCode > 0x12) {
             console.error(`Invalid register code: ${registerCode.toString(16)}`);
-            return; // Ukončíme metodu bez nastavení hodnoty
+            return; // End method without setting value
         }
         
         switch (registerCode) {
@@ -469,7 +469,7 @@ constructor() {
                 this.registers[register][0] = (value >> 4) & 0xF;
                 this.registers[register][1] = value & 0xF;
             }
-        } else { // 8-bit mode - stále používáme dvě 4-bitové banky
+        } else { // 8-bit mode - still using two 4-bit banks
             if (highLow === 'high') {
                 this.registers[register][0] = value & 0xF;
             } else if (highLow === 'low') {
@@ -481,56 +481,56 @@ constructor() {
         }
     }
 
-    // Vykonání instrukce
+    // Execute instruction
     execute(opcode, type) {
         try {
             switch (opcode) {
-                case 0x0: // NOP
+                case 0x0: // NOP - No Operation
                     break;
-                case 0x1: // HLT
+                case 0x1: // HLT - Halt
                     this.running = false;
                     console.log("Program halted");
                     break;
-                case 0x2: // INT
+                case 0x2: // INT - Interrupt
                     this.executeINT(type);
                     break;
-                case 0x10: // MOV
+                case 0x10: // MOV - Move data
                     this.executeMOV(type);
                     break;
-                case 0x11: // ADD
+                case 0x11: // ADD - Addition
                     this.executeADD(type);
                     break;
-                case 0x12: // SUB
+                case 0x12: // SUB - Subtraction
                     this.executeSUB(type);
                     break;
-                case 0x13: // AND
+                case 0x13: // AND - Logical AND
                     this.executeAND(type);
                     break;
-                case 0x14: // OR
+                case 0x14: // OR - Logical OR
                     this.executeOR(type);
                     break;
-                case 0x15: // XOR
+                case 0x15: // XOR - Logical XOR
                     this.executeXOR(type);
                     break;
-                case 0x16: // NOT
+                case 0x16: // NOT - Logical NOT
                     this.executeNOT(type);
                     break;
-                case 0x17: // JMP
+                case 0x17: // JMP - Jump
                     this.executeJMP(type);
                     break;
-                case 0x18: // JZ
+                case 0x18: // JZ - Jump if Zero
                     this.executeJZ(type);
                     break;
-                case 0x19: // JC
+                case 0x19: // JC - Jump if Carry
                     this.executeJC(type);
                     break;
-                case 0x1A: // SHL
+                case 0x1A: // SHL - Shift Left
                     this.executeSHL(type);
                     break;
-                case 0x1B: // SHR
+                case 0x1B: // SHR - Shift Right
                     this.executeSHR(type);
                     break;
-                case 0x1C: // CMP
+                case 0x1C: // CMP - Compare
                     this.executeCMP(type);
                     break;
                 default:
@@ -542,16 +542,16 @@ constructor() {
         }
     }
 
-    // Fix for the executeINT method
+    // Execute INT instruction
     executeINT(type) {
         switch (type) {
-            case 0x00: { // INT reg
+            case 0x00: { // INT reg - Interrupt using register value
                 const intReg = this.memory[this.registers.PC++];
                 const intNum = this.getRegisterValue(intReg);
                 this.handleInterrupt(intNum);
                 break;
             }
-            case 0x01: { // INT [mem]
+            case 0x01: { // INT [mem] - Interrupt using memory value
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
                     const intNum = this.memory[address];
@@ -561,7 +561,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // INT #immediate
+            case 0x03: { // INT #immediate - Interrupt using immediate value
                 const intNum = this.memory[this.registers.PC++];
                 this.handleInterrupt(intNum);
                 break;
@@ -571,7 +571,7 @@ constructor() {
         }
     }
 
-    // Also fix the handleInterrupt method to properly display AX on LEDs
+    // Handle interrupt
     handleInterrupt(intNum) {
         console.log(`Handling interrupt: ${intNum}`);
         switch (intNum) {
@@ -587,17 +587,17 @@ constructor() {
         }
     }
 
-    // Implementace MOV instrukce
+    // Execute MOV instruction
     executeMOV(type) {
         switch (type) {
-            case 0x00: { // MOV reg, reg
+            case 0x00: { // MOV reg, reg - Move from register to register
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const value = this.getRegisterValue(srcReg);
                 this.setRegisterValue(destReg, value);
                 break;
             }
-            case 0x01: { // MOV reg, [mem]
+            case 0x01: { // MOV reg, [mem] - Move from memory to register
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -608,7 +608,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // MOV [mem], reg
+            case 0x02: { // MOV [mem], reg - Move from register to memory
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -619,19 +619,19 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // MOV reg, #immediate
+            case 0x03: { // MOV reg, #immediate - Move immediate value to register
                 const destReg = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 this.setRegisterValue(destReg, value);
                 break;
             }
-            case 0x04: { // MOV MOP, #immediate
+            case 0x04: { // MOV MOP, #immediate - Set Memory Operation Mode
                 const mode = this.memory[this.registers.PC++];
                 this.registers.F.MOP = mode === 0 ? 0 : 1;
                 console.log(`MOP mode set to ${this.registers.F.MOP === 1 ? '4-bit' : '8-bit'}`);
                 break;
             }
-            case 0x05: { // MOV [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // MOV [mem1], [mem2] - Move from memory to memory
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
@@ -642,7 +642,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // MOV [mem], #immediate - NOVÝ TYP
+            case 0x06: { // MOV [mem], #immediate - Move immediate value to memory
                 const address = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -657,10 +657,10 @@ constructor() {
         }
     }
 
-    // Implementace ADD instrukce
+    // Execute ADD instruction
     executeADD(type) {
         switch (type) {
-            case 0x00: { // ADD reg, reg
+            case 0x00: { // ADD reg, reg - Add register to register
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -670,7 +670,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // ADD reg, [mem]
+            case 0x01: { // ADD reg, [mem] - Add memory to register
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -684,7 +684,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // ADD [mem], reg
+            case 0x02: { // ADD [mem], reg - Add register to memory
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -698,7 +698,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // ADD reg, #immediate
+            case 0x03: { // ADD reg, #immediate - Add immediate to register
                 const destReg = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -707,7 +707,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // ADD [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // ADD [mem1], [mem2] - Add memory to memory
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
@@ -721,7 +721,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // ADD [mem], #immediate - NOVÝ TYP
+            case 0x06: { // ADD [mem], #immediate - Add immediate to memory
                 const address = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -739,10 +739,10 @@ constructor() {
         }
     }
 
-    // Implementace SUB instrukce
+    // Execute SUB instruction
     executeSUB(type) {
         switch (type) {
-            case 0x00: { // SUB reg, reg
+            case 0x00: { // SUB reg, reg - Subtract register from register
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -752,7 +752,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // SUB reg, [mem]
+            case 0x01: { // SUB reg, [mem] - Subtract memory from register
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -766,7 +766,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // SUB [mem], reg
+            case 0x02: { // SUB [mem], reg - Subtract register from memory
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -780,7 +780,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // SUB reg, #immediate
+            case 0x03: { // SUB reg, #immediate - Subtract immediate from register
                 const destReg = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -789,7 +789,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // SUB [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // SUB [mem1], [mem2] - Subtract memory from memory
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
@@ -803,7 +803,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // SUB [mem], #immediate - NOVÝ TYP
+            case 0x06: { // SUB [mem], #immediate - Subtract immediate from memory
                 const address = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -820,11 +820,11 @@ constructor() {
                 console.error(`Unknown SUB type: ${type}`);
         }
     }
-
-    // Implementace AND instrukce
+    
+    // Execute AND instruction
     executeAND(type) {
         switch (type) {
-            case 0x00: { // AND reg, reg
+            case 0x00: { // AND reg, reg - Perform logical AND between registers
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -834,7 +834,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // AND reg, [mem]
+            case 0x01: { // AND reg, [mem] - Perform logical AND between register and memory
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -848,7 +848,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // AND [mem], reg
+            case 0x02: { // AND [mem], reg - Perform logical AND between memory and register
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -862,7 +862,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // AND reg, #immediate
+            case 0x03: { // AND reg, #immediate - Perform logical AND between register and immediate value
                 const destReg = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -871,7 +871,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // AND [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // AND [mem1], [mem2] - Perform logical AND between two memory locations
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
@@ -885,7 +885,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // AND [mem], #immediate - NOVÝ TYP
+            case 0x06: { // AND [mem], #immediate - Perform logical AND between memory and immediate value
                 const address = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -903,10 +903,10 @@ constructor() {
         }
     }
 
-    // Implementace OR instrukce
+    // Execute OR instruction
     executeOR(type) {
         switch (type) {
-            case 0x00: { // OR reg, reg
+            case 0x00: { // OR reg, reg - Perform logical OR between registers
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -916,7 +916,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // OR reg, [mem]
+            case 0x01: { // OR reg, [mem] - Perform logical OR between register and memory
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -930,7 +930,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // OR [mem], reg
+            case 0x02: { // OR [mem], reg - Perform logical OR between memory and register
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -944,7 +944,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // OR reg, #immediate
+            case 0x03: { // OR reg, #immediate - Perform logical OR between register and immediate value
                 const destReg = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -953,7 +953,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // OR [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // OR [mem1], [mem2] - Perform logical OR between two memory locations
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
@@ -967,7 +967,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // OR [mem], #immediate - NOVÝ TYP
+            case 0x06: { // OR [mem], #immediate - Perform logical OR between memory and immediate value
                 const address = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -985,10 +985,10 @@ constructor() {
         }
     }
 
-    // Implementace XOR instrukce
+    // Execute XOR instruction
     executeXOR(type) {
         switch (type) {
-            case 0x00: { // XOR reg, reg
+            case 0x00: { // XOR reg, reg - Perform logical XOR between registers
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -998,7 +998,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // XOR reg, [mem]
+            case 0x01: { // XOR reg, [mem] - Perform logical XOR between register and memory
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -1012,7 +1012,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // XOR [mem], reg
+            case 0x02: { // XOR [mem], reg - Perform logical XOR between memory and register
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -1026,7 +1026,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // XOR reg, #immediate
+            case 0x03: { // XOR reg, #immediate - Perform logical XOR between register and immediate value
                 const destReg = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -1035,7 +1035,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // XOR [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // XOR [mem1], [mem2] - Perform logical XOR between two memory locations
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
@@ -1049,7 +1049,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // XOR [mem], #immediate - NOVÝ TYP
+            case 0x06: { // XOR [mem], #immediate - Perform logical XOR between memory and immediate value
                 const address = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -1067,10 +1067,10 @@ constructor() {
         }
     }
 
-    // Implementace NOT instrukce
+    // Execute NOT instruction
     executeNOT(type) {
         switch (type) {
-            case 0x00: { // NOT reg
+            case 0x00: { // NOT reg - Perform logical NOT on register
                 const destReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
                 const result = ~a & 0xFF;
@@ -1078,7 +1078,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // NOT [mem]
+            case 0x01: { // NOT [mem] - Perform logical NOT on memory
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
                     const a = this.memory[address];
@@ -1095,10 +1095,10 @@ constructor() {
         }
     }
 
-    // Implementace JMP instrukce
+    // Execute JMP instruction
     executeJMP(type) {
         switch (type) {
-            case 0x00: { // JMP reg
+            case 0x00: { // JMP reg - Jump to address in register
                 const srcReg = this.memory[this.registers.PC++];
                 const address = this.getRegisterValue(srcReg);
                 if (address < this.memory.length) {
@@ -1109,7 +1109,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x01: { // JMP [mem]
+            case 0x01: { // JMP [mem] - Jump to address in memory
                 const addressPtr = this.memory[this.registers.PC++];
                 if (addressPtr < this.memory.length) {
                     const address = this.memory[addressPtr];
@@ -1124,7 +1124,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // JMP #immediate
+            case 0x03: { // JMP #immediate - Jump to immediate address
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
                     this.registers.PC = address;
@@ -1139,11 +1139,11 @@ constructor() {
         }
     }
 
-    // Implementace JZ instrukce
+    // Execute JZ instruction (Jump if Zero)
     executeJZ(type) {
         if (this.registers.F.ZF === 1) {
             switch (type) {
-                case 0x00: { // JZ reg
+                case 0x00: { // JZ reg - Jump to address in register if zero flag is set
                     const srcReg = this.memory[this.registers.PC++];
                     const address = this.getRegisterValue(srcReg);
                     if (address < this.memory.length) {
@@ -1154,7 +1154,7 @@ constructor() {
                     }
                     break;
                 }
-                case 0x01: { // JZ [mem]
+                case 0x01: { // JZ [mem] - Jump to address in memory if zero flag is set
                     const addressPtr = this.memory[this.registers.PC++];
                     if (addressPtr < this.memory.length) {
                         const address = this.memory[addressPtr];
@@ -1169,7 +1169,7 @@ constructor() {
                     }
                     break;
                 }
-                case 0x03: { // JZ #immediate
+                case 0x03: { // JZ #immediate - Jump to immediate address if zero flag is set
                     const address = this.memory[this.registers.PC++];
                     if (address < this.memory.length) {
                         this.registers.PC = address;
@@ -1183,18 +1183,18 @@ constructor() {
                     console.error(`Unknown JZ type: ${type}`);
             }
         } else {
-            // Pokud ZF není nastaven, přeskočíme operand
+            // If ZF is not set, skip the operand
             if (type === 0x00 || type === 0x01 || type === 0x03) {
                 this.registers.PC++;
             }
         }
     }
 
-    // Implementace JC instrukce
+    // Execute JC instruction (Jump if Carry)
     executeJC(type) {
         if (this.registers.F.CF === 1) {
             switch (type) {
-                case 0x00: { // JC reg
+                case 0x00: { // JC reg - Jump to address in register if carry flag is set
                     const srcReg = this.memory[this.registers.PC++];
                     const address = this.getRegisterValue(srcReg);
                     if (address < this.memory.length) {
@@ -1205,7 +1205,7 @@ constructor() {
                     }
                     break;
                 }
-                case 0x01: { // JC [mem]
+                case 0x01: { // JC [mem] - Jump to address in memory if carry flag is set
                     const addressPtr = this.memory[this.registers.PC++];
                     if (addressPtr < this.memory.length) {
                         const address = this.memory[addressPtr];
@@ -1220,7 +1220,7 @@ constructor() {
                     }
                     break;
                 }
-                case 0x03: { // JC #immediate
+                case 0x03: { // JC #immediate - Jump to immediate address if carry flag is set
                     const address = this.memory[this.registers.PC++];
                     if (address < this.memory.length) {
                         this.registers.PC = address;
@@ -1234,32 +1234,32 @@ constructor() {
                     console.error(`Unknown JC type: ${type}`);
             }
         } else {
-            // Pokud CF není nastaven, přeskočíme operand
+            // If CF is not set, skip the operand
             if (type === 0x00 || type === 0x01 || type === 0x03) {
                 this.registers.PC++;
             }
         }
     }
 
-    // Implementace SHL instrukce
+    // Execute SHL instruction (Shift Left)
     executeSHL(type) {
         switch (type) {
-            case 0x00: { // SHL reg, reg
+            case 0x00: { // SHL reg, reg - Shift register left by count in another register
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
-                const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
+                const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bits shift
                 const result = a << count;
                 this.setRegisterValue(destReg, result);
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // SHL reg, [mem]
+            case 0x01: { // SHL reg, [mem] - Shift register left by count in memory
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
                     const a = this.getRegisterValue(destReg);
-                    const count = this.memory[address] & 0x7; // Max 7 bitů posunu
+                    const count = this.memory[address] & 0x7; // Max 7 bits shift
                     const result = a << count;
                     this.setRegisterValue(destReg, result);
                     this.updateFlagsFromResult(result);
@@ -1268,12 +1268,12 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // SHL [mem], reg
+            case 0x02: { // SHL [mem], reg - Shift memory left by count in register
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
                     const a = this.memory[address];
-                    const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
+                    const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bits shift
                     const result = a << count;
                     this.memory[address] = result & 0xFF;
                     this.updateFlagsFromResult(result);
@@ -1282,21 +1282,21 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // SHL reg, #immediate
+            case 0x03: { // SHL reg, #immediate - Shift register left by immediate count
                 const destReg = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
+                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bits shift
                 const a = this.getRegisterValue(destReg);
                 const result = a << count;
                 this.setRegisterValue(destReg, result);
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // SHL [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // SHL [mem1], [mem2] - Shift memory left by count in another memory location
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
                     const a = this.memory[destAddress];
-                    const count = this.memory[srcAddress] & 0x7; // Max 7 bitů posunu
+                    const count = this.memory[srcAddress] & 0x7; // Max 7 bits shift
                     const result = a << count;
                     this.memory[destAddress] = result & 0xFF;
                     this.updateFlagsFromResult(result);
@@ -1305,9 +1305,9 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // SHL [mem], #immediate - NOVÝ TYP
+            case 0x06: { // SHL [mem], #immediate - Shift memory left by immediate count
                 const address = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
+                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bits shift
                 if (address < this.memory.length) {
                     const a = this.memory[address];
                     const result = a << count;
@@ -1323,25 +1323,25 @@ constructor() {
         }
     }
 
-    // Implementace SHR instrukce
+    // Execute SHR instruction (Shift Right)
     executeSHR(type) {
         switch (type) {
-            case 0x00: { // SHR reg, reg
+            case 0x00: { // SHR reg, reg - Shift register right by count in another register
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
-                const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
+                const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bits shift
                 const result = a >> count;
                 this.setRegisterValue(destReg, result);
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // SHR reg, [mem]
+            case 0x01: { // SHR reg, [mem] - Shift register right by count in memory
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
                     const a = this.getRegisterValue(destReg);
-                    const count = this.memory[address] & 0x7; // Max 7 bitů posunu
+                    const count = this.memory[address] & 0x7; // Max 7 bits shift
                     const result = a >> count;
                     this.setRegisterValue(destReg, result);
                     this.updateFlagsFromResult(result);
@@ -1350,12 +1350,12 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // SHR [mem], reg
+            case 0x02: { // SHR [mem], reg - Shift memory right by count in register
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
                     const a = this.memory[address];
-                    const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bitů posunu
+                    const count = this.getRegisterValue(srcReg) & 0x7; // Max 7 bits shift
                     const result = a >> count;
                     this.memory[address] = result & 0xFF;
                     this.updateFlagsFromResult(result);
@@ -1364,21 +1364,21 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // SHR reg, #immediate
+            case 0x03: { // SHR reg, #immediate - Shift register right by immediate count
                 const destReg = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
+                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bits shift
                 const a = this.getRegisterValue(destReg);
                 const result = a >> count;
                 this.setRegisterValue(destReg, result);
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // SHR [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // SHR [mem1], [mem2] - Shift memory right by count in another memory location
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
                     const a = this.memory[destAddress];
-                    const count = this.memory[srcAddress] & 0x7; // Max 7 bitů posunu
+                    const count = this.memory[srcAddress] & 0x7; // Max 7 bits shift
                     const result = a >> count;
                     this.memory[destAddress] = result & 0xFF;
                     this.updateFlagsFromResult(result);
@@ -1387,9 +1387,9 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // SHR [mem], #immediate - NOVÝ TYP
+            case 0x06: { // SHR [mem], #immediate - Shift memory right by immediate count
                 const address = this.memory[this.registers.PC++];
-                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bitů posunu
+                const count = this.memory[this.registers.PC++] & 0x7; // Max 7 bits shift
                 if (address < this.memory.length) {
                     const a = this.memory[address];
                     const result = a >> count;
@@ -1405,10 +1405,10 @@ constructor() {
         }
     }
 
-    // Implementace CMP instrukce
+    // Execute CMP instruction (Compare)
     executeCMP(type) {
         switch (type) {
-            case 0x00: { // CMP reg, reg
+            case 0x00: { // CMP reg, reg - Compare register with register
                 const destReg = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -1417,7 +1417,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x01: { // CMP reg, [mem]
+            case 0x01: { // CMP reg, [mem] - Compare register with memory
                 const destReg = this.memory[this.registers.PC++];
                 const address = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -1430,7 +1430,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x02: { // CMP [mem], reg
+            case 0x02: { // CMP [mem], reg - Compare memory with register
                 const address = this.memory[this.registers.PC++];
                 const srcReg = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -1443,7 +1443,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x03: { // CMP reg, #immediate
+            case 0x03: { // CMP reg, #immediate - Compare register with immediate value
                 const destReg = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 const a = this.getRegisterValue(destReg);
@@ -1451,7 +1451,7 @@ constructor() {
                 this.updateFlagsFromResult(result);
                 break;
             }
-            case 0x05: { // CMP [mem1], [mem2] - NOVÝ TYP
+            case 0x05: { // CMP [mem1], [mem2] - Compare memory with memory
                 const destAddress = this.memory[this.registers.PC++];
                 const srcAddress = this.memory[this.registers.PC++];
                 if (destAddress < this.memory.length && srcAddress < this.memory.length) {
@@ -1464,7 +1464,7 @@ constructor() {
                 }
                 break;
             }
-            case 0x06: { // CMP [mem], #immediate - NOVÝ TYP
+            case 0x06: { // CMP [mem], #immediate - Compare memory with immediate value
                 const address = this.memory[this.registers.PC++];
                 const value = this.memory[this.registers.PC++];
                 if (address < this.memory.length) {
@@ -1481,26 +1481,26 @@ constructor() {
         }
     }
 
-    // Aktualizace flagů na základě výsledku operace
+    // Update flags based on operation result
     updateFlagsFromResult(result) {
-        const maxValue = this.registers.F.MOP === 1 ? 0xF : 0xFF; // Max hodnota podle MOP módu
-        
-        // Carry Flag - nastaví se, pokud dojde k přetečení
+        const maxValue = this.registers.F.MOP === 1 ? 0xF : 0xFF; // Max value based on MOP mode
+      
+        // Carry Flag - set if overflow occurs
         this.registers.F.CF = result > maxValue || result < 0 ? 1 : 0;
-        
-        // Upravíme výsledek podle módu
+      
+        // Adjust result based on mode
         const maskedResult = result & maxValue;
-        
-        // Zero Flag - nastaví se, pokud je výsledek 0
+      
+        // Zero Flag - set if result is 0
         this.registers.F.ZF = maskedResult === 0 ? 1 : 0;
-        
-        // Sign Flag - nastaví se, pokud je nejvyšší bit výsledku 1
+      
+        // Sign Flag - set if highest bit of result is 1
         this.registers.F.SF = (maskedResult & (this.registers.F.MOP === 1 ? 0x8 : 0x80)) !== 0 ? 1 : 0;
-        
-        // Overflow Flag - nastaví se při přetečení nebo podtečení
+      
+        // Overflow Flag - set on overflow or underflow
         this.registers.F.OF = (result > maxValue || result < 0) ? 1 : 0;
-        
-        // Parity Flag - nastaví se, pokud je počet jedničkových bitů sudý
+      
+        // Parity Flag - set if number of 1 bits is even
         let bits = maskedResult;
         let parity = 0;
         while (bits > 0) {
@@ -1510,11 +1510,11 @@ constructor() {
         this.registers.F.PF = parity === 0 ? 1 : 0;
     }
 
-    // Aktualizace zobrazení registrů
+    // Update register display
     updateRegisters() {
         const registersDiv = document.getElementById('registers');
-        
-        // Vždy zobrazujeme registry jako dvě 4-bitové banky
+      
+        // Always display registers as two 4-bit banks
         registersDiv.innerHTML = `
         AX: ${this.registers.AX[0].toString(16)}${this.registers.AX[1].toString(16)} (AH: ${this.registers.AX[0].toString(16)}, AL: ${this.registers.AX[1].toString(16)})<br>
         BX: ${this.registers.BX[0].toString(16)}${this.registers.BX[1].toString(16)} (BH: ${this.registers.BX[0].toString(16)}, BL: ${this.registers.BX[1].toString(16)})<br>
@@ -1527,7 +1527,7 @@ constructor() {
         `;
     }
 
-    // Aktualizace zobrazení flagů
+    // Update flags display
     updateFlags() {
         const flagsDiv = document.getElementById('flags');
         flagsDiv.innerHTML = `
@@ -1541,15 +1541,15 @@ constructor() {
         `;
     }
 
-    // Aktualizace zobrazení LED
+    // Update LED display
     updateLEDs() {
         const ledDisplay = document.getElementById('ledDisplay');
         ledDisplay.innerHTML = '';
-        
-        // Získání hodnoty z registru AX
+      
+        // Get value from AX register
         const output = this.getRegisterValue(0x01);
-        
-        // Vytvoření LED pro každý bit
+      
+        // Create LED for each bit
         for (let i = 7; i >= 0; i--) {
             const led = document.createElement('div');
             led.className = 'led' + ((output & (1 << i)) ? ' on' : '');
@@ -1558,30 +1558,30 @@ constructor() {
         }
     }
 
-    // Aktualizace zobrazení paměti
+    // Update memory display
     updateMemoryDisplay() {
         const memoryDiv = document.getElementById('memory');
         memoryDiv.innerHTML = '';
-        
-        // Vytvoření tabulky pro paměť
+      
+        // Create table for memory
         const table = document.createElement('table');
         table.className = 'memory-table';
-        
-        // Vytvoření hlavičky tabulky
+      
+        // Create table header
         const headerRow = document.createElement('tr');
         headerRow.innerHTML = '<th></th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th>';
         table.appendChild(headerRow);
-        
-        // Vytvoření buněk pro paměť
+      
+        // Create cells for memory
         for (let row = 0; row < 16; row++) {
             const tr = document.createElement('tr');
-            
-            // Přidání hlavičky řádku
+          
+            // Add row header
             const th = document.createElement('th');
             th.textContent = row.toString(16).toUpperCase();
             tr.appendChild(th);
-            
-            // Přidání buněk s hodnotami
+          
+            // Add cells with values
             for (let col = 0; col < 16; col++) {
                 const address = row * 16 + col;
                 const td = document.createElement('td');
@@ -1590,25 +1590,25 @@ constructor() {
                 td.title = `Address: ${address.toString(16).padStart(2, '0').toUpperCase()}`;
                 tr.appendChild(td);
             }
-            
+          
             table.appendChild(tr);
         }
-        
+      
         memoryDiv.appendChild(table);
     }
 
-    // Aktualizace zobrazení kódu programu
+    // Update program code display
     updateProgramCode(program) {
         const programCodeDiv = document.getElementById('programCode');
-        
-        // Přidání čísel řádků a zvýraznění syntaxe
+      
+        // Add line numbers and syntax highlighting
         const lines = program.split('\n');
         let formattedCode = '';
-        
+      
         lines.forEach((line, index) => {
             const lineNumber = (index + 1).toString().padStart(3, '0');
-            
-            // Zvýraznění komentářů
+          
+            // Highlight comments
             let formattedLine = line;
             const commentIndex = line.indexOf(';');
             if (commentIndex !== -1) {
@@ -1616,13 +1616,13 @@ constructor() {
                 const comment = line.substring(commentIndex);
                 formattedLine = `${code}<span class="comment">${comment}</span>`;
             }
-            
+          
             formattedCode += `<span class="line-number">${lineNumber}:</span> ${formattedLine}\n`;
         });
-        
+      
         programCodeDiv.innerHTML = formattedCode;
     }
 }
 
-// Vytvoření instance CPU
+// Create CPU instance
 const cpu = new CPU();
