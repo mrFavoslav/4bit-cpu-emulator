@@ -91,9 +91,9 @@ Each instruction consists of an opcode and optional operands. The format varies 
 - `BX` (BH:BL) - General purpose register
 - `CX` (CH:CL) - General purpose register
 - `DX` (DH:DL) - General purpose register
-- `EX` (EH:EL) - General purpose register
-- `GX` (GH:GL) - General purpose register
-- `PC` - Program Counter
+- `MA` (MH:ML) - 
+- `DT` (DTH:DTL) - 
+- `PC` (PH:PL) - Program Counter
 - `IR` (IH:IL) - Instruction Register
 
 ### Flags
