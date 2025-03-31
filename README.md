@@ -91,8 +91,8 @@ Each instruction consists of an opcode and optional operands. The format varies 
 - `BX` (BH:BL) - General purpose register
 - `CX` (CH:CL) - General purpose register
 - `DX` (DH:DL) - General purpose register
-- `MA` (MH:ML) - 
-- `DT` (DTH:DTL) - 
+- `MA` (MAH:MAL) #HIDDEN - Memory addressing
+- `DT` (DTH:DTL) #HIDDEN - Memory data transfer
 - `PC` (PH:PL) - Program Counter
 - `IR` (IH:IL) - Instruction Register
 
