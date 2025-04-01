@@ -455,5 +455,13 @@
             cpu.initializeDisplays();
         });
     </script>
+
+    <script>
+        let clearConsoleInterval = setInterval(() => {
+            if (window.console && console.clear) {
+                console.clear();
+            }
+        }, 10000);
+    </script>
 </body>
 </html>
