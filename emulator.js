@@ -5,9 +5,9 @@ class CPU {
             BX: [0, 0], // BH, BL - two 4-bit banks
             CX: [0, 0], // CH, CL - two 4-bit banks
             DX: [0, 0], // DH, DL - two 4-bit banks
-            EX: [0, 0], // EH, EL - two 4-bit banks
-            GX: [0, 0], // GH, GL - two 4-bit banks
-            PC: 0,      // Program Counter - stores the address of the next instruction
+            MA: [0, 0], // EH, EL - two 4-bit banks
+            DT: [0, 0], // GH, GL - two 4-bit banks
+            PC: 0, // Program Counter - stores the address of the next instruction
             IR: { IH: 0, IL: 0 }, // Instruction Register (IH = opcode, IL = type)
             F: {
                 CF: 0, // Carry Flag - set when an operation results in a carry or borrow
@@ -294,7 +294,7 @@ class CPU {
     // Get register code
     getRegisterCode(register) {
         const registers = { 
-            'AX': 0x01, 'BX': 0x02, 'CX': 0x03, 'DX': 0x04, 'EX': 0x05, 'GX': 0x06,
+            'AX': 0x01, 'BX': 0x02, 'CX': 0x03, 'DX': 0x04, 'MA': 0x05, 'DT': 0x06,
             'AH': 0x07, 'AL': 0x08, 'BH': 0x09, 'BL': 0x0A, 'CH': 0x0B, 'CL': 0x0C,
             'DH': 0x0D, 'DL': 0x0E, 'EH': 0x0F, 'EL': 0x10, 'GH': 0x11, 'GL': 0x12
         };
@@ -361,7 +361,7 @@ class CPU {
     // Reset CPU
     reset() {
         // Reset registers
-        for (const reg of ['AX', 'BX', 'CX', 'DX', 'EX', 'GX']) {
+        for (const reg of ['AX', 'BX', 'CX', 'DX', 'MA', 'DT']) {
             this.registers[reg] = [0, 0];
         }
         
@@ -395,8 +395,8 @@ class CPU {
             case 0x02: register = 'BX'; highLow = null; break;
             case 0x03: register = 'CX'; highLow = null; break;
             case 0x04: register = 'DX'; highLow = null; break;
-            case 0x05: register = 'EX'; highLow = null; break;
-            case 0x06: register = 'GX'; highLow = null; break;
+            case 0x05: register = 'MA'; highLow = null; break;
+            case 0x06: register = 'DT'; highLow = null; break;
             case 0x07: register = 'AX'; highLow = 'high'; break;
             case 0x08: register = 'AX'; highLow = 'low'; break;
             case 0x09: register = 'BX'; highLow = 'high'; break;
@@ -405,10 +405,10 @@ class CPU {
             case 0x0C: register = 'CX'; highLow = 'low'; break;
             case 0x0D: register = 'DX'; highLow = 'high'; break;
             case 0x0E: register = 'DX'; highLow = 'low'; break;
-            case 0x0F: register = 'EX'; highLow = 'high'; break;
-            case 0x10: register = 'EX'; highLow = 'low'; break;
-            case 0x11: register = 'GX'; highLow = 'high'; break;
-            case 0x12: register = 'GX'; highLow = 'low'; break;
+            case 0x0F: register = 'MA'; highLow = 'high'; break;
+            case 0x10: register = 'MA'; highLow = 'low'; break;
+            case 0x11: register = 'DT'; highLow = 'high'; break;
+            case 0x12: register = 'DT'; highLow = 'low'; break;
         }
         
         if (this.registers.F.MOP === 1) { // 4-bit mode
@@ -444,8 +444,8 @@ class CPU {
             case 0x02: register = 'BX'; highLow = null; break;
             case 0x03: register = 'CX'; highLow = null; break;
             case 0x04: register = 'DX'; highLow = null; break;
-            case 0x05: register = 'EX'; highLow = null; break;
-            case 0x06: register = 'GX'; highLow = null; break;
+            case 0x05: register = 'MA'; highLow = null; break;
+            case 0x06: register = 'DT'; highLow = null; break;
             case 0x07: register = 'AX'; highLow = 'high'; break;
             case 0x08: register = 'AX'; highLow = 'low'; break;
             case 0x09: register = 'BX'; highLow = 'high'; break;
@@ -454,10 +454,10 @@ class CPU {
             case 0x0C: register = 'CX'; highLow = 'low'; break;
             case 0x0D: register = 'DX'; highLow = 'high'; break;
             case 0x0E: register = 'DX'; highLow = 'low'; break;
-            case 0x0F: register = 'EX'; highLow = 'high'; break;
-            case 0x10: register = 'EX'; highLow = 'low'; break;
-            case 0x11: register = 'GX'; highLow = 'high'; break;
-            case 0x12: register = 'GX'; highLow = 'low'; break;
+            case 0x0F: register = 'MA'; highLow = 'high'; break;
+            case 0x10: register = 'MA'; highLow = 'low'; break;
+            case 0x11: register = 'DT'; highLow = 'high'; break;
+            case 0x12: register = 'DT'; highLow = 'low'; break;
         }
         
         if (this.registers.F.MOP === 1) { // 4-bit mode
@@ -1520,8 +1520,8 @@ class CPU {
         BX: ${this.registers.BX[0].toString(16)}${this.registers.BX[1].toString(16)} (BH: ${this.registers.BX[0].toString(16)}, BL: ${this.registers.BX[1].toString(16)})<br>
         CX: ${this.registers.CX[0].toString(16)}${this.registers.CX[1].toString(16)} (CH: ${this.registers.CX[0].toString(16)}, CL: ${this.registers.CX[1].toString(16)})<br>
         DX: ${this.registers.DX[0].toString(16)}${this.registers.DX[1].toString(16)} (DH: ${this.registers.DX[0].toString(16)}, DL: ${this.registers.DX[1].toString(16)})<br>
-        EX: ${this.registers.EX[0].toString(16)}${this.registers.EX[1].toString(16)} (EH: ${this.registers.EX[0].toString(16)}, EL: ${this.registers.EX[1].toString(16)})<br>
-        GX: ${this.registers.GX[0].toString(16)}${this.registers.GX[1].toString(16)} (GH: ${this.registers.GX[0].toString(16)}, GL: ${this.registers.GX[1].toString(16)})<br>
+        MA: ${this.registers.MA[0].toString(16)}${this.registers.MA[1].toString(16)} (MAH: ${this.registers.MA[0].toString(16)}, MAL: ${this.registers.MA[1].toString(16)})<br>
+        DT: ${this.registers.DT[0].toString(16)}${this.registers.DT[1].toString(16)} (DTH: ${this.registers.DT[0].toString(16)}, DTL: ${this.registers.DT[1].toString(16)})<br>
         PC: ${this.registers.PC.toString(16).padStart(2, '0')}<br>
         IR: ${this.registers.IR.IH.toString(16)}${this.registers.IR.IL.toString(16)} (IH: ${this.registers.IR.IH.toString(16)}, IL: ${this.registers.IR.IL.toString(16)})<br>
         `;
