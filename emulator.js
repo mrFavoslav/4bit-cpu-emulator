@@ -25,6 +25,7 @@ class CPU {
         this.eventListenersAttached = false; // Flag to check if event listeners are already attached
         this.initializeDisplays();
         this.attachEventListeners();
+        this.delay = 10;
     }
 
     // Initialize displays
@@ -48,6 +49,36 @@ class CPU {
         document.getElementById('stopBtn').addEventListener('click', () => this.stop());
         document.getElementById('stepBtn').addEventListener('click', () => this.step());
         document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+    
+        const speedInput = document.getElementById('speedInput');
+        const applyButton = document.getElementById('applySpeed');
+        let timeoutId = null;
+    
+        applyButton.addEventListener('click', () => {
+            // Disable button during timeout
+            applyButton.disabled = true;
+    
+            // Clear any existing timeout
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+    
+            // Stop the CPU
+            this.stop();
+    
+            // Set new delay value
+            let value = parseInt(speedInput.value);
+            value = Math.max(1, Math.min(1000, value));
+            speedInput.value = value;
+            this.delay = value;
+    
+            // Wait 100ms before running again
+            timeoutId = setTimeout(() => {
+                this.run();
+                applyButton.disabled = false;
+                timeoutId = null;
+            }, 100);
+        });
         
         this.eventListenersAttached = true;
     }
@@ -321,7 +352,7 @@ class CPU {
                 this.stop();
                 console.log("Program reached end of memory");
             }
-        }, 10);
+        }, this.delay);
     }
 
     // Stop program
@@ -1600,26 +1631,26 @@ class CPU {
     // Update program code display
     updateProgramCode(program) {
         const programCodeDiv = document.getElementById('programCode');
-      
+        
         // Add line numbers and syntax highlighting
         const lines = program.split('\n');
         let formattedCode = '';
-      
+        
         lines.forEach((line, index) => {
             const lineNumber = (index + 1).toString().padStart(3, '0');
-          
+            
             // Highlight comments
-            let formattedLine = line;
-            const commentIndex = line.indexOf(';');
+            let formattedLine = line.trimRight();
+            const commentIndex = formattedLine.indexOf(';');
             if (commentIndex !== -1) {
-                const code = line.substring(0, commentIndex);
-                const comment = line.substring(commentIndex);
+                const code = formattedLine.substring(0, commentIndex);
+                const comment = formattedLine.substring(commentIndex);
                 formattedLine = `${code}<span class="comment">${comment}</span>`;
             }
-          
+            
             formattedCode += `<span class="line-number">${lineNumber}:</span> ${formattedLine}\n`;
         });
-      
+        
         programCodeDiv.innerHTML = formattedCode;
     }
 }

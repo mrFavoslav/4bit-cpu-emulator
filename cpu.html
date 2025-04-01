@@ -5,16 +5,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>4-bit/8-bit CPU Emulator</title>
     <style>
-        /* Base styling for the entire document */
+       /* CSS proměnné pro barvy */
+        :root {
+            /* Light mode (výchozí) */
+            --bg-color: #f0f0f0;
+            --text-color: #333;
+            --section-bg: #fff;
+            --border-color: #ddd;
+            --button-bg: #0078d4;
+            --button-hover: #005bb5;
+            --led-off: #ddd;
+            --led-border: #ccc;
+            --table-header-bg: #f2f2f2;
+            --active-cell-bg: #e6f3ff;
+            --active-cell-color: #0078d4;
+            --code-bg: #f5f5f5;
+            --line-number-color: #666;
+            --comment-color: #008000;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --input-border: #0078d4;
+            --input-focus: #005bb5;
+            --speed-text: #666;
+        }
+
+        /* Dark mode */
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --section-bg: #2d2d2d;
+            --border-color: #404040;
+            --button-bg: #0078d4;
+            --button-hover: #005bb5;
+            --led-off: #444;
+            --led-border: #555;
+            --table-header-bg: #333;
+            --active-cell-bg: #1e3a5a;
+            --active-cell-color: #66b3ff;
+            --code-bg: #2d2d2d;
+            --line-number-color: #888;
+            --comment-color: #6a9955;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --input-border: #0078d4;
+            --input-focus: #66b3ff;
+            --speed-text: #888;
+        }
+
+        /* Base styling */
         body {
             font-family: monospace;
-            background: #f0f0f0;
-            color: #333;
+            background: var(--bg-color);
+            color: var(--text-color);
             padding: 20px;
-            font-size: 16px; /* Increased base font size */
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s;
+            margin: 0;
+            line-height: 1.6;
         }
-        
-        /* Main container with two-column grid layout */
+
+        /* Container layout */
         .container {
             display: grid;
             grid-template-columns: 1fr 1fr; /* Split into two columns */
@@ -23,166 +71,334 @@
             max-width: 1400px; /* Increased maximum width */
             margin: 0 auto;
         }
-        
-        /* Left column positioning */
+
         .left-column {
             grid-column: 1;
         }
-        
-        /* Right column positioning */
+
         .right-column {
             grid-column: 2;
         }
-        
-        /* Styling for each section/panel */
+
+        /* Section styling */
         .section {
-            background: #fff;
-            padding: 20px; /* Increased padding */
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            background: var(--section-bg);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px var(--shadow-color);
+            margin-bottom: 20px;
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
         }
-        
-        /* Header styling */
+
+        /* Headers */
         h2, h3 {
             margin: 0 0 15px;
-            font-size: 1.5em; /* Increased header size */
+            font-size: 1.5em;
+            color: var(--text-color);
+            transition: color 0.3s;
         }
-        
-        /* Button styling */
+
+        h3 {
+            font-size: 1.2em;
+        }
+
+        /* Buttons */
         button {
-            background: #0078d4;
+            background: var(--button-bg);
             color: white;
             border: none;
-            padding: 12px 24px; /* Larger buttons */
+            padding: 12px 24px;
             margin: 8px;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1.1em; /* Increased button text size */
+            font-size: 1.1em;
+            transition: background-color 0.2s, transform 0.1s;
         }
-        
-        /* Button hover effect */
+
         button:hover {
-            background: #005bb5;
+            background: var(--button-hover);
+            transform: translateY(-1px);
         }
-        
-        /* LED display styling */
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        /* LED display */
         .led {
-            width: 40px; /* Larger LEDs */
+            width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: #ddd;
+            background: var(--led-off);
             display: inline-block;
             margin: 8px;
-            border: 2px solid #ccc;
+            border: 2px solid var(--led-border);
+            transition: background-color 0.3s, box-shadow 0.3s;
         }
-        
-        /* Styling for active/on LEDs */
+
         .led.on {
             background: #ff0000;
             box-shadow: 0 0 15px #ff0000;
         }
-        
-        /* Memory table styling */
+
+        /* Memory display */
         .memory-table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 16px; /* Increased table text size */
+            font-size: 16px;
         }
-        
-        /* Memory table cell styling */
-        .memory-table th, .memory-table td {
-            border: 1px solid #ddd;
-            padding: 6px;
+
+        .memory-table th,
+        .memory-table td {
+            border: 1px solid var(--border-color);
+            padding: 8px;
             text-align: center;
+            transition: background-color 0.3s, color 0.3s;
         }
-        
-        /* Memory table header styling */
+
         .memory-table th {
-            background-color: #f2f2f2;
+            background-color: var(--table-header-bg);
             font-weight: bold;
         }
-        
-        /* Highlight for active memory cell (current PC) */
+
         .memory-table td.active {
-            background-color: #e6f3ff;
-            font-weight: bold;
-            color: #0078d4;
+            background-color: var(--active-cell-bg);
+            color: var(--active-cell-color);
         }
-        
-        /* Individual memory cell styling (alternative display) */
+
+        /* Memory cells */
         .memory-cell {
             display: inline-block;
-            width: 40px; /* Larger memory cells */
+            width: 40px;
             height: 40px;
-            border: 1px solid #ccc;
+            border: 1px solid var(--border-color);
             text-align: center;
             line-height: 40px;
             margin: 3px;
-            background: #fff;
-            font-size: 16px; /* Increased cell text size */
+            background: var(--section-bg);
+            font-size: 16px;
+            transition: background-color 0.3s, border-color 0.3s;
         }
-        
-        /* Highlight for active memory cell */
+
         .memory-cell.active {
-            background: #e6f3ff;
-            border-color: #0078d4;
+            background: var(--active-cell-bg);
+            border-color: var(--active-cell-color);
         }
-        
-        /* Code display styling */
-        pre {
-            background: #f5f5f5;
+
+        /* Code display */
+        pre, #programCode {
+            background: var(--code-bg);
             padding: 15px;
             border-radius: 5px;
             overflow-x: auto;
-            max-height: 500px; /* Increased height for code display */
-            font-size: 16px; /* Increased code text size */
-            line-height: 1.5;
-        }
-        
-        /* Register and flag display styling */
-        #registers, #flags {
-            font-size: 16px; /* Increased text size for registers and flags */
-            line-height: 1.8;
-        }
-
-        /* Container for program code with scrolling */
-        .section:has(#programCode) {
-            max-height: 600px; /* Maximum section height */
-            overflow: hidden; /* Hide overflowing content */
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Program code display with scrolling */
-        #programCode {
-            flex: 1;
-            overflow-y: auto; /* Enable vertical scrolling */
-            margin: 0;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 5px;
             font-size: 16px;
             line-height: 1.5;
-            white-space: pre;
-            height: calc(100% - 60px); /* Height minus padding and header */
+            transition: background-color 0.3s;
         }
 
-        /* Line number styling in code display */
+        #programCode {
+            height: calc(100% - 60px);
+            margin: 0;
+            white-space: pre;
+        }
+
+        /* Line numbers and comments */
         .line-number {
-            color: #666;
+            color: var(--line-number-color);
             user-select: none;
             margin-right: 10px;
+            transition: color 0.3s;
         }
 
-        /* Comment styling in code display */
         .comment {
-            color: #008000;
+            color: var(--comment-color);
             font-style: italic;
+            transition: color 0.3s;
+        }
+
+        /* Speed control section */
+        .speed-control {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .speed-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .speed-input {
+            width: 80px;
+            padding: 8px;
+            font-size: 16px;
+            border: 2px solid var(--input-border);
+            border-radius: 5px;
+            outline: none;
+            text-align: center;
+            font-family: monospace;
+            background: var(--section-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s, box-shadow 0.3s, background-color 0.3s, color 0.3s;
+        }
+
+        .speed-input:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 5px rgba(0, 120, 212, 0.3);
+        }
+
+        .speed-unit {
+            font-size: 16px;
+            color: var(--speed-text);
+            font-family: monospace;
+            transition: color 0.3s;
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            z-index: 1000;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .theme-toggle:hover {
+            background: var(--button-hover);
+            transform: rotate(180deg);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--button-bg);
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--button-hover);
+        }
+
+        /* Disabled button state */
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Responsive design */
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .left-column,
+            .right-column {
+                grid-column: auto;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 10px;
+            }
+
+            button {
+                padding: 8px 16px;
+                font-size: 1em;
+            }
+
+            .led {
+                width: 30px;
+                height: 30px;
+            }
+
+            .memory-cell {
+                width: 30px;
+                height: 30px;
+                line-height: 30px;
+            }
+
+            #registers, #flags {
+                font-family: 'Courier New', monospace;
+                white-space: pre;
+                font-size: 16px;
+                line-height: 1.5;
+            }
+
+            .register-line, .flag-line {
+                display: block;
+                font-family: 'Courier New', monospace;
+                white-space: pre;
+            }
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle">🌓</button>
+    <script>
+        // Přidáme funkci pro přepínání tématu
+        document.addEventListener('DOMContentLoaded', function() {
+            const cpu = new CPU();
+            cpu.initializeDisplays();
+
+            // Theme toggle functionality
+            const themeToggle = document.getElementById('themeToggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Nastavíme výchozí téma podle systémových preferencí
+            if (prefersDarkScheme.matches) {
+                document.body.setAttribute('data-theme', 'dark');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.body.getAttribute('data-theme');
+                if (currentTheme === 'dark') {
+                    document.body.removeAttribute('data-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    document.body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+
+            // Načteme uložené téma z localStorage
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                if (savedTheme === 'dark') {
+                    document.body.setAttribute('data-theme', 'dark');
+                } else {
+                    document.body.removeAttribute('data-theme');
+                }
+            }
+        });
+    </script>
     <div class="container">
         <!-- Left column sections -->
         <div class="section left-column">
@@ -197,6 +413,15 @@
         <div class="section left-column">
             <h2>Registers</h2>
             <div id="registers"></div>
+        
+            <div class="speed-control">
+                <h3>Speed Delay</h3>
+                <div class="speed-input-container">
+                    <input type="number" id="speedInput" min="1" max="1000" value="10" class="speed-input">
+                    <span class="speed-unit">ms</span>
+                    <button id="applySpeed" class="speed-button">Apply</button>
+                </div>
+            </div>
         </div>
 
         <div class="section left-column">
