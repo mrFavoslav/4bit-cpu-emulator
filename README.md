@@ -1,3 +1,11 @@
+# ⚠️ Disclaimer
+
+> **This project is no longer actively maintained.**
+> It was originally created as a small experimental/test project.
+> At this point, it mainly serves as a reference for a future project where I plan to design and build a custom 8-bit CPU from scratch.
+
+---
+
 # 4-bit CPU Emulator
 
 Welcome to the **4-bit CPU Emulator**! This project is a web-based emulator for a simple CPU that supports both 4-bit and 8-bit operations. It allows you to load, execute, and debug programs in a simulated environment with features like registers, flags, memory, and output LEDs.
