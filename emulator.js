@@ -85,21 +85,22 @@ class CPU {
 
     // Load program into memory
     loadProgram() {
-        fetch('./prog.ass')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to load program: ' + response.statusText);
-                }
-                return response.text();
-            })
-            .then(program => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.ass,.txt,.asm';
+        input.onchange = (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const program = e.target.result;
                 this.loadProgramIntoMemory(program);
                 this.updateProgramCode(program);
-            })
-            .catch(error => {
-                console.error('Error loading program:', error);
-                alert('Failed to load program. Check the console for details.');
-            });
+            };
+            reader.onerror = () => alert('Failed to read file.');
+            reader.readAsText(file);
+        };
+        input.click();
     }
 
     // Load program into memory
