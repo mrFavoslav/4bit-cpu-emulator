@@ -363,14 +363,14 @@
 <body>
     <button class="theme-toggle" id="themeToggle">🌓</button>
     <script>
-        // Přidáme funkci pro přepínání tématu
+        // Add a function for switching themes
         document.addEventListener('DOMContentLoaded', function() {
 
             // Theme toggle functionality
             const themeToggle = document.getElementById('themeToggle');
             const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
             
-            // Nastavíme výchozí téma podle systémových preferencí
+            // Set the default theme according to system preferences
             if (prefersDarkScheme.matches) {
                 document.body.setAttribute('data-theme', 'dark');
             }

@@ -230,10 +230,28 @@ Each instruction consists of an opcode and optional operands. The format varies 
 | 0x0D 05 | [mem1], [mem2] | Compare memory locations | `CMP [10], [20]` |
 | 0x0D 06 | [mem], #imm | Compare memory with immediate | `CMP [10], #42` |
 
+### INT (Interrupt / system call) Instructions
+Opcode **0xFE** invokes emulator services by interrupt number. Operand forms match other instructions (type byte + operands).
+
+| Opcode | Type | Description | Example |
+|--------|------|-------------|---------|
+| 0xFE 00 | reg | Interrupt number from register | `INT AX` |
+| 0xFE 01 | [mem] | Interrupt number from memory byte | `INT [10]` |
+| 0xFE 03 | #imm | Interrupt number as immediate | `INT #0` |
+
+| Interrupt # | Service |
+|-------------|---------|
+| 0 | Refresh **Output LEDs** from the current **AX** value (8-bit pattern) |
+| 1 | Write the low byte of **AX** as a character to the browser **console** |
+| other | Logged as unknown; execution continues |
+
+Examples: `INT #0` after loading a value into AX updates the LED panel; `MOV AX, #41` then `INT #1` prints `A` in the devtools console.
+
 ### Special Instructions
 | Opcode | Description | Example |
 |--------|-------------|---------|
 | 0x00 | No Operation (NOP) | `NOP` |
+| 0xFE | Software interrupt (INT) | `INT #0` |
 | 0xFF | Halt execution (HLT) | `HLT` |
 
 ### Notes

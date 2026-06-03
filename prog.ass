@@ -1,3 +1,20 @@
+;MOV MOP, #0 ;8-bit MODE
+
+;start:
+;    MOV AX, #0x00
+
+;loop:
+;    ADD AX, #0x01
+
+;    CMP AX, #0xff
+;    JZ start  
+
+;JMP loop
+
+;HLT ;nenastane
+
+
+
 MOV MOP, #0 ;8-bit MODE
 
 start:
@@ -8,7 +25,5 @@ loop:
 
     CMP AX, #0xff
     JZ start  
-
-JMP loop
 
 HLT ;nenastane
